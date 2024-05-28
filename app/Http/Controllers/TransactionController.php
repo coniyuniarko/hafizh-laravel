@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateTransactionRequest;
 use App\Models\Transaction;
 use App\Http\Resources\TransactionResource;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class TransactionController extends Controller
 {
@@ -21,8 +22,7 @@ class TransactionController extends Controller
             'end' => 'date|nullable',
             'per_page' => 'integer|min:0|nullable',
             'order_by' => 'string|nullable',
-            'asc' => 'boolean|nullable',
-            'desc' => 'boolean|nullable',
+            'ordering' => Rule::in(['asc', 'desc']),
         ]);
 
         $transactions = Transaction::query();
@@ -37,11 +37,10 @@ class TransactionController extends Controller
             $transactions = $transactions->where('date', '<=', $validated['end']);
         }
         $order_by = $validated['order_by'] ?? 'date';
-        $order_asc = isset($validated['asc']) ? 'asc' : 'desc';
-        $order_asc = isset($validated['desc']) ? 'desc' : 'asc';
+        $ordering = $validated['ordering'] ?? 'desc';
         $transactions = $transactions
-            ->orderBy($order_by, $order_asc)
-            ->paginate($validated['per_page'] ?? null ? $validated['per_page'] : 10);
+            ->orderBy($order_by, $ordering)
+            ->paginate($validated['per_page'] ?? 10);
         return TransactionResource::collection($transactions);
     }
 

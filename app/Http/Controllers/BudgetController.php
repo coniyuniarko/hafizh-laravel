@@ -6,15 +6,32 @@ use App\Http\Requests\StoreBudgetRequest;
 use App\Http\Requests\UpdateBudgetRequest;
 use App\Models\Budget;
 use App\Http\Resources\BudgetResource;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class BudgetController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $budgets = Budget::all();
+        $validated = $request->validate([
+            'search' => 'string|nullable',
+            'per_page' => 'integer|min:0|nullable',
+            'order_by' => 'string|nullable',
+            'ordering' => Rule::in(['asc', 'desc']),
+        ]);
+
+        $budgets = Budget::query();
+        if ($validated['search'] ?? null) {
+            $budgets = $budgets->where('category', 'LIKE', "%{$validated['search']}%");
+        }
+        $order_by = $validated['order_by'] ?? 'date';
+        $ordering = $validated['ordering'] ?? 'desc';
+        $budgets = $budgets
+            ->orderBy($order_by, $ordering)
+            ->paginate($validated['per_page'] ?? 10);
         return BudgetResource::collection($budgets);
     }
 
