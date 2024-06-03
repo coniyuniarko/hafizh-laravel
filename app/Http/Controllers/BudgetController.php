@@ -27,8 +27,8 @@ class BudgetController extends Controller
         if ($validated['search'] ?? null) {
             $budgets = $budgets->where('category', 'LIKE', "%{$validated['search']}%");
         }
-        $order_by = $validated['order_by'] ?? 'date';
-        $ordering = $validated['ordering'] ?? 'desc';
+        $order_by = $validated['order_by'] ?? 'category';
+        $ordering = $validated['ordering'] ?? 'asc';
         $budgets = $budgets
             ->orderBy($order_by, $ordering)
             ->paginate($validated['per_page'] ?? 10);
